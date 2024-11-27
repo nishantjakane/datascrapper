@@ -8,6 +8,10 @@ const PORT = process.env.PORT || 4000;
 // Array of target years
 const targetYears = ["Mar 2024", "Mar 2023", "Mar 2022", "Mar 2013"];
 
+app.get("/", async (req, res) =>{
+    res.send("Running")
+})
+
 app.get("/api/profit-loss", async (req, res) => {
   try {
     const url = "https://www.screener.in/company/INFY/"; // Replace with dynamic URL if needed
