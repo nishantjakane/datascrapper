@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +46,51 @@ async function getRatioId(code) {
     throw error;  // Propagate error if needed
   }
 }
+
+app.get("/api/ratios", async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.status(400).json({ error: "Code parameter is required" });
+    }
+
+    // Fetch the Screener page
+    const response = await axios.get(`https://www.screener.in/company/${code}`);
+    const html = response.data;
+    const $ = cheerio.load(html);
+
+    // Extract table rows inside #ratios
+    const tableRows = $("#ratios table tr");
+    const ratiosData = [];
+
+    tableRows.each((index, row) => {
+      const cells = $(row).find("td, th");
+      const rowData = [];
+      cells.each((_, cell) => {
+        rowData.push($(cell).text().trim());
+      });
+      if (rowData.length) {
+        ratiosData.push(rowData);
+      }
+    });
+
+    // Convert to JSON structure
+    const headers = ratiosData[0];
+    const jsonData = ratiosData.slice(1).map(row =>
+      row.reduce((acc, value, index) => {
+        acc[headers[index]] = value;
+        return acc;
+      }, {})
+    );
+
+    // Return the extracted JSON data
+    res.json({ message: "Data extracted successfully", data: jsonData });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 app.get("/api/quickratio", async (req, res) => {
   const code = req.query.code;
