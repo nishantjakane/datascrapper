@@ -331,23 +331,25 @@ app.get("/api/quarters", async (req, res) => {
 });
 function transformData(input) {
   const years = Object.keys(input.data[0]).slice(1); // Get the years from the first category (excluding the empty key)
-  
+
   const transformedData = {};
 
   input.data.forEach(category => {
-    const categoryName = category[""];
-    const yearValues = years.map(year => ({
-      year: year,
-      value: category[year]
-    }));
+    // Modify category name: If it's "Net Profit +", change it to "Net Profit"
+    const categoryName = category[""] === "Net Profit +" ? "Net Profit" : category[""];
 
-    transformedData[categoryName] = yearValues.reduce((obj, item) => {
-      obj[item.year] = item.value; // Assign the year as the key and value as the corresponding number
-      return obj;
-    }, {});
+    years.forEach(year => {
+      // Initialize the year entry in the transformedData if not already done
+      if (!transformedData[year]) {
+        transformedData[year] = [];
+      }
+
+      // Push corresponding values to each year entry
+      transformedData[year].push(category[year]);
+    });
   });
 
-  return { data: transformedData }; // Wrap the transformed data inside the "data" key
+  return {transformedData }; // Wrap the transformed data inside the "data" key
 }
 
 
