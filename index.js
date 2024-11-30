@@ -330,11 +330,10 @@ app.get("/api/quarters", async (req, res) => {
   }
 });
 
-async function extractTableData(code,type) {
+async function extractTableData(code, type) {
   let url;
   if (type === "consolidated") {
     url = "https://www.screener.in/company/" + code + "/consolidated/";
-
   } else {
     url = "https://www.screener.in/company/" + code;
   }
@@ -366,29 +365,38 @@ async function extractTableData(code,type) {
       rowsData.push(row);
     });
 
-    return { data: rowsData };
+    // Process rowsData into the desired format
+    const result = {};
+    rowsData.forEach(row => {
+      const key = row[""]; // The first column is the label (e.g., "Sales +", "Net profit +")
+      if (key) {
+        result[key] = headers.slice(1).map(header => row[header] || ""); // Store the values for each quarter
+      }
+    });
+
+    return { data: result };
   } catch (error) {
     console.error("Error extracting table data:", error.message);
     return { error: "An error occurred while fetching data." };
   }
 }
 
-
 app.get("/api/trading/quarters", async (req, res) => {
   const code = req.query.code;
-  const type  = req.query.type;
+  const type = req.query.type;
 
   if (!code) {
     return res.status(400).json({ error: "Company code is required." });
   }
 
   try {
-    const tableData = await extractTableData(code,type);
+    const tableData = await extractTableData(code, type);
     res.json(tableData);
   } catch (error) {
     res.status(500).json({ error: "Failed to extract table data." });
   }
 });
+
 
 app.get("/api/balance-sheet", async (req, res) => {
   const code = req.query.code; // Get the 'code' query parameter
