@@ -329,11 +329,33 @@ app.get("/api/quarters", async (req, res) => {
     });
   }
 });
+function transformData(input) {
+  const years = Object.keys(input.data[0]).slice(1); // Get the years from the first category (excluding the empty key)
+  
+  const transformedData = {};
 
-async function extractTableData(code, type) {
+  input.data.forEach(category => {
+    const categoryName = category[""];
+    const yearValues = years.map(year => ({
+      year: year,
+      value: category[year]
+    }));
+
+    transformedData[categoryName] = yearValues.reduce((obj, item) => {
+      obj[item.year] = item.value; // Assign the year as the key and value as the corresponding number
+      return obj;
+    }, {});
+  });
+
+  return transformedData;
+}
+
+
+async function extractTableData(code,type) {
   let url;
   if (type === "consolidated") {
     url = "https://www.screener.in/company/" + code + "/consolidated/";
+
   } else {
     url = "https://www.screener.in/company/" + code;
   }
@@ -365,38 +387,31 @@ async function extractTableData(code, type) {
       rowsData.push(row);
     });
 
-    // Process rowsData into the desired format
-    const result = {};
-    rowsData.forEach(row => {
-      const key = row[""]; // The first column is the label (e.g., "Sales +", "Net profit +")
-      if (key) {
-        result[key] = headers.slice(1).map(header => row[header] || ""); // Store the values for each quarter
-      }
-    });
-
-    return { data: result };
+    return { data: rowsData };
   } catch (error) {
     console.error("Error extracting table data:", error.message);
     return { error: "An error occurred while fetching data." };
   }
 }
 
+
 app.get("/api/trading/quarters", async (req, res) => {
   const code = req.query.code;
-  const type = req.query.type;
+  const type  = req.query.type;
 
   if (!code) {
     return res.status(400).json({ error: "Company code is required." });
   }
 
   try {
-    const tableData = await extractTableData(code, type);
-    res.json(tableData);
+    const tableData = await extractTableData(code,type);
+    const transformedData = transformData(tableData);
+
+    res.json(transformedData);
   } catch (error) {
     res.status(500).json({ error: "Failed to extract table data." });
   }
 });
-
 
 app.get("/api/balance-sheet", async (req, res) => {
   const code = req.query.code; // Get the 'code' query parameter
