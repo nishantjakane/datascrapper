@@ -2,6 +2,9 @@ const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
+const {
+  url
+} = require("inspector");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,50 +15,74 @@ const PORT = process.env.PORT || 3000;
 
 const targetYears = ["Mar 2024", "Mar 2023", "Mar 2022", "Mar 2013"];
 
-async function getRatioId(code) {
-  const url = "https://www.screener.in/company/" + code;
+async function getRatioId(code, type) {
+  let url;
+  if (type === "consolidated") {
+    url = "https://www.screener.in/company/" + code + "/consolidated/";
+
+  } else {
+    url = "https://www.screener.in/company/" + code;
+
+  }
+
 
   // Define valid headers for the request
   const headers = {
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'accept-encoding': 'gzip, deflate, br, zstd',
-    'accept-language': 'en-US,en;q=0.9',
-    'cache-control': 'max-age=0',
-    'cookie': 'csrftoken=Hpl4URRGvUZTyWMJXfxNFA6hMgQnVt29; sessionid=d9ntx5feo4385ajxec30hyuti4brpuy6',
-    'priority': 'u=0, i',
-    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'document',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-site': 'none',
-    'sec-fetch-user': '?1',
-    'upgrade-insecure-requests': '1',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br, zstd",
+    "accept-language": "en-US,en;q=0.9",
+    "cookie": "csrftoken=Hpl4URRGvUZTyWMJXfxNFA6hMgQnVt29; sessionid=d9ntx5feo4385ajxec30hyuti4brpuy6",
+    "priority": "u=1, i",
+    "referer": url,
+    "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "x-requested-with": "XMLHttpRequest"
   };
 
   try {
-    const response = await axios.get(url, { headers });
+    const response = await axios.get(url, {
+      headers
+    });
     const $ = cheerio.load(response.data);
 
     // Extract data-warehouse-id from the div
     const warehouseId = $('div[data-warehouse-id]').attr('data-warehouse-id');
-    return warehouseId;  // Return the id
+    return warehouseId; // Return the id
   } catch (error) {
     console.error('Error fetching ratio ID:', error);
-    throw error;  // Propagate error if needed
+    throw error; // Propagate error if needed
   }
 }
 
 app.get("/api/ratios", async (req, res) => {
   try {
-    const { code } = req.query;
+    const {
+      code
+    } = req.query;
+    const {
+      type
+    } = req.query;
     if (!code) {
-      return res.status(400).json({ error: "Code parameter is required" });
+      return res.status(400).json({
+        error: "Code parameter is required"
+      });
+    }
+    let url;
+    if (type === "consolidated") {
+      url = "https://www.screener.in/company/" + code + "/consolidated/";
+  
+    } else {
+      url = "https://www.screener.in/company/" + code;
+  
     }
 
     // Fetch the Screener page
-    const response = await axios.get(`https://www.screener.in/company/${code}`);
+    const response = await axios.get(url);
     const html = response.data;
     const $ = cheerio.load(html);
 
@@ -84,22 +111,36 @@ app.get("/api/ratios", async (req, res) => {
     );
 
     // Return the extracted JSON data
-    res.json({ message: "Data extracted successfully", data: jsonData });
+    res.json({
+      message: "Data extracted successfully",
+      data: jsonData
+    });
   } catch (error) {
     console.error("Error fetching data:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({
+      error: "Internal Server Error"
+    });
   }
 });
 
 
 app.get("/api/quickratio", async (req, res) => {
   const code = req.query.code;
+  const type = req.query.type;
   let ratioData;
   let ratios = [];
-  
+  let url;
+  if (type === "consolidated") {
+    url = "https://www.screener.in/company/" + code + "/consolidated/";
+
+  } else {
+    url = "https://www.screener.in/company/" + code;
+
+  }
+
   try {
     // Wait for the getRatioId to return the correct ID
-    const id = await getRatioId(code);
+    const id = await getRatioId(code, type);
 
     if (!id) {
       return res.status(404).send('Warehouse ID not found');
@@ -107,28 +148,30 @@ app.get("/api/quickratio", async (req, res) => {
 
     // Define valid headers for the request
     const headers = {
-      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-      'accept-encoding': 'gzip, deflate, br, zstd',
-      'accept-language': 'en-US,en;q=0.9',
-      'cache-control': 'max-age=0',
-      'cookie': 'csrftoken=Hpl4URRGvUZTyWMJXfxNFA6hMgQnVt29; sessionid=d9ntx5feo4385ajxec30hyuti4brpuy6',
-      'priority': 'u=0, i',
-      'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Windows"',
-      'sec-fetch-dest': 'document',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-site': 'none',
-      'sec-fetch-user': '?1',
-      'upgrade-insecure-requests': '1',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, br, zstd",
+      "accept-language": "en-US,en;q=0.9",
+      "cookie": "csrftoken=Hpl4URRGvUZTyWMJXfxNFA6hMgQnVt29; sessionid=d9ntx5feo4385ajxec30hyuti4brpuy6",
+      "priority": "u=1, i",
+      "referer": url,
+      "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-origin",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      "x-requested-with": "XMLHttpRequest"
+
     };
 
     // Use the obtained id to form the ratio URL
     const ratioUrl = `https://www.screener.in/api/company/${id}/quick_ratios/`;
 
     // Make the request to get the ratios data
-    const ratioResponse = await axios.get(ratioUrl, { headers });
+    const ratioResponse = await axios.get(ratioUrl, {
+      headers
+    });
     ratioData = ratioResponse.data;
 
     // Parse the ratio data and extract values
@@ -146,16 +189,23 @@ app.get("/api/quickratio", async (req, res) => {
 });
 
 app.get("/api/profit-loss", async (req, res) => {
-  const code = req.query.code; // Get the 'code' query parameter
+  const code = req.query.code;
+  const type = req.query.type; // Get the 'code' query parameter
 
   if (!code) {
     return res.status(400).json({
       message: "Code parameter is required."
     });
   }
+  let url;
+  if (type === "consolidated") {
+    url = "https://www.screener.in/company/" + code + "/consolidated/";
 
+  } else {
+    url = "https://www.screener.in/company/" + code;
+
+  }
   try {
-    const url = `https://www.screener.in/company/${code}/`; // Construct URL dynamically using the 'code'
 
     // Fetch the HTML content
     const {
@@ -207,6 +257,7 @@ app.get("/api/profit-loss", async (req, res) => {
 
 app.get("/api/quarters", async (req, res) => {
   const code = req.query.code; // Get the 'code' query parameter
+  const type = req.query.type;
 
   if (!code) {
     return res.status(400).json({
@@ -214,8 +265,16 @@ app.get("/api/quarters", async (req, res) => {
     });
   }
 
+  let url;
+  if (type === "consolidated") {
+    url = "https://www.screener.in/company/" + code + "/consolidated/";
+
+  } else {
+    url = "https://www.screener.in/company/" + code;
+
+  }
+
   try {
-    const url = `https://www.screener.in/company/${code}/`; // Construct URL dynamically using the 'code'
 
     // Fetch the HTML content
     const {
@@ -271,8 +330,77 @@ app.get("/api/quarters", async (req, res) => {
   }
 });
 
+async function extractTableData(code,type) {
+  let url;
+  if (type === "consolidated") {
+    url = "https://www.screener.in/company/" + code + "/consolidated/";
+
+  } else {
+    url = "https://www.screener.in/company/" + code;
+  }
+
+  try {
+    // Fetch the page content using axios
+    const { data: html } = await axios.get(url);
+    const $ = cheerio.load(html);
+
+    // Select the table you want to extract (modify selector as needed)
+    const table = $("section#quarters table");
+    if (!table.length) {
+      return { error: "Table not found on the page." };
+    }
+
+    // Extract headers
+    const headers = [];
+    table.find("thead th").each((_, th) => {
+      headers.push($(th).text().trim());
+    });
+
+    // Extract rows
+    const rowsData = [];
+    table.find("tbody tr").each((_, tr) => {
+      const row = {};
+      $(tr).find("td").each((index, td) => {
+        row[headers[index]] = $(td).text().trim();
+      });
+      rowsData.push(row);
+    });
+
+    return { data: rowsData };
+  } catch (error) {
+    console.error("Error extracting table data:", error.message);
+    return { error: "An error occurred while fetching data." };
+  }
+}
+
+
+app.get("/api/trading/quarters", async (req, res) => {
+  const code = req.query.code;
+  const type  = req.query.type;
+
+  if (!code) {
+    return res.status(400).json({ error: "Company code is required." });
+  }
+
+  try {
+    const tableData = await extractTableData(code,type);
+    res.json(tableData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to extract table data." });
+  }
+});
+
 app.get("/api/balance-sheet", async (req, res) => {
   const code = req.query.code; // Get the 'code' query parameter
+  const type = req.query.type;
+  let url;
+  if (type === "consolidated") {
+    url = "https://www.screener.in/company/" + code + "/consolidated/";
+
+  } else {
+    url = "https://www.screener.in/company/" + code;
+
+  }
 
   if (!code) {
     return res.status(400).json({
@@ -281,7 +409,6 @@ app.get("/api/balance-sheet", async (req, res) => {
   }
 
   try {
-    const url = `https://www.screener.in/company/${code}/`; // Construct URL dynamically using the 'code'
 
     // Fetch the HTML content
     const {
