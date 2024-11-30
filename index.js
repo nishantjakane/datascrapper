@@ -347,7 +347,7 @@ function transformData(input) {
     }, {});
   });
 
-  return transformedData;
+  return { data: transformedData }; // Wrap the transformed data inside the "data" key
 }
 
 
