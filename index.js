@@ -349,7 +349,7 @@ function transformData(input) {
     });
   });
 
-  return {transformedData }; // Wrap the transformed data inside the "data" key
+  return transformedData; // Wrap the transformed data inside the "data" key
 }
 
 
