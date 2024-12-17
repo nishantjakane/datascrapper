@@ -255,6 +255,26 @@ app.get("/api/profit-loss", async (req, res) => {
   }
 });
 
+function transformJson(input) {
+  const {table } = input;
+  const transformedTable = {};
+
+  table.forEach(row => {
+    // Remove the "+" from Column_1 and trim any extra spaces
+    const key = row['Column_1'].replace('+', '').trim();
+    
+    // Remove the 'Column_1' key and keep only the data for the sub-items
+    const { Column_1, ...data } = row;
+    
+    // Add the data as a parent key with its data nested inside
+    transformedTable[key] = { ...data };
+  });
+
+  return {
+    ...transformedTable
+  };
+}
+
 app.get("/api/quarters", async (req, res) => {
   const code = req.query.code; // Get the 'code' query parameter
   const type = req.query.type;
@@ -268,18 +288,13 @@ app.get("/api/quarters", async (req, res) => {
   let url;
   if (type === "consolidated") {
     url = "https://www.screener.in/company/" + code + "/consolidated/";
-
   } else {
     url = "https://www.screener.in/company/" + code;
-
   }
 
   try {
-
     // Fetch the HTML content
-    const {
-      data: html
-    } = await axios.get(url);
+    const { data: html } = await axios.get(url);
     const $ = cheerio.load(html);
 
     // Select the "quarters" section and extract the table
@@ -296,6 +311,16 @@ app.get("/api/quarters", async (req, res) => {
       headers.push($(th).text().trim());
     });
 
+    // Extract entire table data row by row
+    const tableData = [];
+    table.find("tbody tr").each((_, row) => {
+      const rowData = {};
+      $(row).find("td").each((index, cell) => {
+        rowData[headers[index] || `Column_${index + 1}`] = $(cell).text().trim();
+      });
+      tableData.push(rowData);
+    });
+
     // Determine column indices
     const totalColumns = headers.length;
     const fifthLastIndex = totalColumns - 5; // 5th last column index
@@ -310,7 +335,8 @@ app.get("/api/quarters", async (req, res) => {
     // Extract data from the 5th-last and last columns
     const quartersData = {
       "recentQuarter": [],
-      "prevQuarter": []
+      "prevQuarter": [],
+      "table": tableData 
     };
 
     table.find("tbody tr").each((_, row) => {
@@ -321,7 +347,9 @@ app.get("/api/quarters", async (req, res) => {
       quartersData["prevQuarter"].push($(cells[fifthLastIndex]).text().trim());
     });
 
+    // Return the quarters data
     res.json(quartersData);
+
   } catch (error) {
     res.status(500).json({
       error: "An error occurred while fetching the table data.",
