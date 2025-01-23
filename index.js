@@ -31,7 +31,7 @@ async function getRatioId(code, type) {
     "accept": "*/*",
     "accept-encoding": "gzip, deflate, br, zstd",
     "accept-language": "en-US,en;q=0.9",
-    "cookie": "csrftoken=TxZZG15EPIIiBMfg1ZCOjDuke4U4bS4M; sessionid=mc9ofjmb8nwtjfpktwsd65jc23y31p8z",
+    "cookie": "csrftoken=zkdU9AAf2hdVAEY882s3bnxDVUSu4ta6; sessionid=f993alrhyukit3kbxhkf555grb81uevd",
     "priority": "u=1, i",
     "referer": url,
     "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
