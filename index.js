@@ -10,7 +10,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 
-
+const headers = {
+  "accept": "*/*",
+  "accept-encoding": "gzip, deflate, br, zstd",
+  "accept-language": "en-US,en;q=0.9",
+  "cookie": "csrftoken=pl5YN85PU8ciwiHiqFJJ9bDeWtbByLr0; sessionid=02mzmzc9qozql9rcqgwgf0kcknvjgm1o",
+  "priority": "u=1, i",
+  "referer": url,
+  "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+  "sec-ch-ua-mobile": "?0",
+  "sec-ch-ua-platform": '"Windows"',
+  "sec-fetch-dest": "empty",
+  "sec-fetch-mode": "cors",
+  "sec-fetch-site": "same-origin",
+  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  "x-requested-with": "XMLHttpRequest"
+};
 
 
 const targetYears = ["Mar 2024", "Mar 2023", "Mar 2022", "Mar 2013"];
@@ -19,45 +34,24 @@ async function getRatioId(code, type) {
   let url;
   if (type === "consolidated") {
     url = "https://www.screener.in/company/" + code + "/consolidated/";
-
   } else {
     url = "https://www.screener.in/company/" + code;
-
   }
 
-
-  // Define valid headers for the request
-  const headers = {
-    "accept": "*/*",
-    "accept-encoding": "gzip, deflate, br, zstd",
-    "accept-language": "en-US,en;q=0.9",
-    "cookie": "csrftoken=zkdU9AAf2hdVAEY882s3bnxDVUSu4ta6; sessionid=f993alrhyukit3kbxhkf555grb81uevd",
-    "priority": "u=1, i",
-    "referer": url,
-    "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": '"Windows"',
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-origin",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "x-requested-with": "XMLHttpRequest"
-  };
+  
 
   try {
-    const response = await axios.get(url, {
-      headers
-    });
+    const response = await axios.get(url, { headers });
     const $ = cheerio.load(response.data);
-
-    // Extract data-warehouse-id from the div
     const warehouseId = $('div[data-warehouse-id]').attr('data-warehouse-id');
-    return warehouseId; // Return the id
+    console.log("Warehouse ID:", warehouseId);
+    return warehouseId;
   } catch (error) {
     console.error('Error fetching ratio ID:', error);
-    throw error; // Propagate error if needed
+    throw error;
   }
 }
+
 
 app.get("/api/ratios", async (req, res) => {
   try {
@@ -147,23 +141,7 @@ app.get("/api/quickratio", async (req, res) => {
     }
 
     // Define valid headers for the request
-    const headers = {
-      "accept": "*/*",
-      "accept-encoding": "gzip, deflate, br, zstd",
-      "accept-language": "en-US,en;q=0.9",
-      "cookie": "csrftoken=TxZZG15EPIIiBMfg1ZCOjDuke4U4bS4M; sessionid=mc9ofjmb8nwtjfpktwsd65jc23y31p8z",
-      "priority": "u=1, i",
-      "referer": url,
-      "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": '"Windows"',
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-origin",
-      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-      "x-requested-with": "XMLHttpRequest"
-
-    };
+    
 
     // Use the obtained id to form the ratio URL
     const ratioUrl = `https://www.screener.in/api/company/${id}/quick_ratios/`;
