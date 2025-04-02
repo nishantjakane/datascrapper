@@ -14,7 +14,7 @@ const headers = {
   "accept": "*/*",
   "accept-encoding": "gzip, deflate, br, zstd",
   "accept-language": "en-US,en;q=0.9",
-  "cookie": "csrftoken=pl5YN85PU8ciwiHiqFJJ9bDeWtbByLr0; sessionid=02mzmzc9qozql9rcqgwgf0kcknvjgm1o",
+  "cookie": "csrftoken=ipEsCmjFkGsZiuydGeIu2BBoJlV543SD; sessionid=wyljcrir33x0lht7skf0u66lnzgkfft5",
   "priority": "u=1, i",
   "referer": url,
   "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
