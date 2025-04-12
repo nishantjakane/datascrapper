@@ -76,7 +76,7 @@ app.get("/api/ratios", async (req, res) => {
     }
 
     // Fetch the Screener page
-    const response = await axios.get(url);
+    const response = await axios.get(url,{ headers });
     const html = response.data;
     const $ = cheerio.load(html);
 
@@ -188,7 +188,7 @@ app.get("/api/profit-loss", async (req, res) => {
     // Fetch the HTML content
     const {
       data: html
-    } = await axios.get(url);
+    } = await axios.get(url,{ headers });
     const $ = cheerio.load(html);
 
 
@@ -272,7 +272,7 @@ app.get("/api/quarters", async (req, res) => {
 
   try {
     // Fetch the HTML content
-    const { data: html } = await axios.get(url);
+    const { data: html } = await axios.get(url,{ headers });
     const $ = cheerio.load(html);
 
     // Select the "quarters" section and extract the table
@@ -370,7 +370,7 @@ async function extractTableData(code,type) {
 
   try {
     // Fetch the page content using axios
-    const { data: html } = await axios.get(url);
+    const { data: html } = await axios.get(url,{ headers });
     const $ = cheerio.load(html);
 
     // Select the table you want to extract (modify selector as needed)
@@ -444,7 +444,7 @@ app.get("/api/balance-sheet", async (req, res) => {
     // Fetch the HTML content
     const {
       data: html
-    } = await axios.get(url);
+    } = await axios.get(url,{ headers });
     const $ = cheerio.load(html);
 
     // Select the "balance-sheet" section and extract the table
