@@ -96,10 +96,10 @@ app.get("/api/ratios", async (req, res) => {
     });
 
     // Convert to JSON structure
-    const headers = ratiosData[0];
+    const tableHeaders  = ratiosData[0];
     const jsonData = ratiosData.slice(1).map(row =>
       row.reduce((acc, value, index) => {
-        acc[headers[index]] = value;
+        acc[tableHeaders [index]] = value;
         return acc;
       }, {})
     );
@@ -202,16 +202,16 @@ app.get("/api/profit-loss", async (req, res) => {
     }
 
     // Extract table headers
-    const headers = [];
+    const tableHeaders  = [];
     table.find("thead th").each((_, th) => {
-      headers.push($(th).text().trim());
+      tableHeaders .push($(th).text().trim());
     });
 
     // Create an object to store data for each target year
     const result = {};
 
     targetYears.forEach((year) => {
-      const columnIndex = headers.indexOf(year);
+      const columnIndex = tableHeaders .indexOf(year);
       if (columnIndex !== -1) {
         const yearData = [];
         table.find("tbody tr").each((_, row) => {
@@ -284,9 +284,9 @@ app.get("/api/quarters", async (req, res) => {
     }
 
     // Extract table headers
-    const headers = [];
+    const tableHeaders  = [];
     table.find("thead th").each((_, th) => {
-      headers.push($(th).text().trim());
+      tableHeaders .push($(th).text().trim());
     });
 
     // Extract entire table data row by row
@@ -294,13 +294,13 @@ app.get("/api/quarters", async (req, res) => {
     table.find("tbody tr").each((_, row) => {
       const rowData = {};
       $(row).find("td").each((index, cell) => {
-        rowData[headers[index] || `Column_${index + 1}`] = $(cell).text().trim();
+        rowData[tableHeaders [index] || `Column_${index + 1}`] = $(cell).text().trim();
       });
       tableData.push(rowData);
     });
 
     // Determine column indices
-    const totalColumns = headers.length;
+    const totalColumns = tableHeaders .length;
     const fifthLastIndex = totalColumns - 5; // 5th last column index
     const lastIndex = totalColumns - 1; // Last column index
 
@@ -380,9 +380,9 @@ async function extractTableData(code,type) {
     }
 
     // Extract headers
-    const headers = [];
+    const tableHeaders  = [];
     table.find("thead th").each((_, th) => {
-      headers.push($(th).text().trim());
+      tableHeaders .push($(th).text().trim());
     });
 
     // Extract rows
@@ -390,7 +390,7 @@ async function extractTableData(code,type) {
     table.find("tbody tr").each((_, tr) => {
       const row = {};
       $(tr).find("td").each((index, td) => {
-        row[headers[index]] = $(td).text().trim();
+        row[tableHeaders [index]] = $(td).text().trim();
       });
       rowsData.push(row);
     });
@@ -456,13 +456,13 @@ app.get("/api/balance-sheet", async (req, res) => {
     }
 
     // Extract table headers
-    const headers = [];
+    const tableHeaders  = [];
     table.find("thead th").each((_, th) => {
-      headers.push($(th).text().trim());
+      tableHeaders .push($(th).text().trim());
     });
 
     // Determine the index of the last column
-    const totalColumns = headers.length;
+    const totalColumns = tableHeaders .length;
     const lastIndex = totalColumns - 1; // Last column index
 
     if (lastIndex < 0) {
